@@ -1,6 +1,6 @@
 # PiCO: Contrastive Label Disambiguation for Partial Label Learning
 
-This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022** paper [PiCO: Contrastive Label Disambiguation for Partial Label Learning](......) by Haobo Wang, Ruixuan Xiao, Yixuan Li, Lei Feng, Gang Niu, Gang Chen, Junbo Zhao. 
+This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022** paper [PiCO: Contrastive Label Disambiguation for Partial Label Learning](https://openreview.net/forum?id=EhYjZy6e1gJ) by Haobo Wang, Ruixuan Xiao, Yixuan Li, Lei Feng, Gang Niu, Gang Chen, Junbo Zhao. 
 
 Code and data comming soon.
 
