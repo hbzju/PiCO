@@ -59,6 +59,6 @@ Technically, we implemented PiCO using a distributed setup because we thought pa
 
 ## Results
 
-Main results on CIFAR-10 and CIFAR-100 datasets with varing $q$ values.
+Main results on CIFAR-10 and CIFAR-100 datasets with varing q values.
 
 ![results](resources/results.png)
