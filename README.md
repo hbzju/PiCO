@@ -61,4 +61,4 @@ Technically, we implemented PiCO using a distributed setup because we thought pa
 
 Main results on CIFAR-10 and CIFAR-100 datasets with varing $q$ values.
 
-![results](C:\Users\Administrator\Desktop\ICLR 2022 - PiCO\PiCO-Code-github\resources\results.png)
+![results](resources/results.png)
