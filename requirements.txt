@@ -1,0 +1,8 @@
+torch==1.7.1
+numpy==1.20.3
+scikit-learn==0.24.0
+torchvision==0.8.2
+pillow==8.3.1
+pickleshare==0.7.5
+scikit-learn==1.0
+tensorboard-logger==0.1.0
