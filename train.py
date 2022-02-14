@@ -27,11 +27,11 @@ from utils.cifar100 import load_cifar100
 
 torch.set_printoptions(precision=2, sci_mode=False)
 
-parser = argparse.ArgumentParser(description='PyTorch Partial Label Training')
+parser = argparse.ArgumentParser(description='PyTorch implementation of ICLR 2022 Oral paper PiCO')
 parser.add_argument('--dataset', default='cifar10', type=str)
-parser.add_argument('--exp-dir', default='experiment/Prot_PLL_v1', type=str,
+parser.add_argument('--exp-dir', default='experiment/Prot_PLL', type=str,
                     help='experiment directory')
-parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',choices=['resnet18', 'resnet50', 'wideresnet'])
+parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',choices=['resnet18'])
 parser.add_argument('-j', '--workers', default=32, type=int,
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=500, type=int, 
@@ -55,8 +55,8 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 parser.add_argument('--wd', '--weight-decay', default=1e-5, type=float,
                     metavar='W', help='weight decay (default: 1e-5)',
                     dest='weight_decay')
-parser.add_argument('-p', '--print-freq', default=50, type=int,
-                    help='print frequency (default: 10)')
+parser.add_argument('-p', '--print-freq', default=100, type=int,
+                    help='print frequency (default: 100)')
 parser.add_argument('--resume', default='', type=str,
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--world-size', default=-1, type=int,
@@ -89,7 +89,8 @@ parser.add_argument('--loss_weight', default=0.5, type=float,help='contrastive l
 parser.add_argument('--conf_ema_range', default='0.95,0.8', type=str)
 parser.add_argument('--prot_start', help = 'Start Prototype Updating', default=80, type=int)
 parser.add_argument('--partial_rate', default=0.1, type=float, help='contrastive loss weight')
-parser.add_argument('--hierarchical', action='store_true')
+parser.add_argument('--hierarchical', action='store_true', 
+                    help='for CIFAR-100 fine-grained training')
 
 def main():
     args = parser.parse_args()
