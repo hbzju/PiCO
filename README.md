@@ -29,7 +29,7 @@ For CIFAR datasets, one can directly run the demo shell codes.
 
 For CUB200 datasets, we provide a preprocessed copy [here](#) and just put them to ```data/cub200/processed``` .
 
-**Run cifar10 with $q=0.5$**
+**Run cifar10 with q=0.5​**
 
 ```shell
 CUDA_VISIBLE_DEVICES=0 python -u train.py \
@@ -39,7 +39,7 @@ CUDA_VISIBLE_DEVICES=0 python -u train.py \
   --loss_weight 0.5 --proto_m 0.99 --partial_rate 0.5
 ```
 
-**Run cifar100 with $q=0.05$**
+**Run cifar100 with q=0.05​**
 
 ```shell
 CUDA_VISIBLE_DEVICES=1 python -u train.py \
@@ -49,7 +49,7 @@ CUDA_VISIBLE_DEVICES=1 python -u train.py \
   --loss_weight 0.5 --proto_m 0.99 --partial_rate 0.05
 ```
 
-**Run CUB200 with $q=0.1$**
+**Run CUB200 with q=0.1​**
 
 ```shell
 CUDA_VISIBLE_DEVICES=2 python -u train.py \
@@ -65,6 +65,6 @@ Technically, we implemented PiCO using a distributed setup because we thought pa
 
 ## Results
 
-Main results on CIFAR-10 and CIFAR-100 datasets with varying $q$ values. PiCO achieves SOTA results and is competitive to the supervised counterparts.
+Main results on CIFAR-10 and CIFAR-100 datasets with varying q​ values. PiCO achieves SOTA results and is competitive to the supervised counterparts.
 
-![results](C:\Users\Administrator\Desktop\ICLR 2022 - PiCO\PiCO-Code-github\resources\results.png)
+![results](resources/results.png)
