@@ -177,9 +177,11 @@ def main_worker(gpu, ngpus_per_node, args):
             args.rank = args.rank * ngpus_per_node + gpu
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 world_size=args.world_size, rank=args.rank)
+    
     # create model
     print("=> creating model '{}'".format(args.arch))
     model = ProtPLL(args, SupConResNet)
+
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
@@ -207,6 +209,8 @@ def main_worker(gpu, ngpus_per_node, args):
         # AllGather implementation (batch shuffle, queue update, etc.) in
         # this code only supports DistributedDataParallel.
         raise NotImplementedError("Only DistributedDataParallel is supported.")
+    
+    # set optimizer
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -330,7 +334,7 @@ def train(train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, args, tb
             # get positive set by contrasting predicted labels
         else:
             mask = None
-            # Using Momemtum Contrastive learning (MoCO)
+            # Warmup using MoCo
 
         # contrastive loss
         loss_cont = loss_cont_fn(features=features_cont, mask=mask, batch_size=batch_size)
