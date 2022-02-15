@@ -66,7 +66,7 @@ CUDA_VISIBLE_DEVICES=2 python -u train.py \
 
 **A Note on Running with Multiple-GPUs**
 
-Technically, we implemented PiCO using a distributed setup because we thought parallelization would be needed. However, while we train PiCO we had never actually enabled the distributed setup but only resorted to one single GPU training. Please carefully check the code if you would like to use multiple GPUs, e.g. prepare a shared local copy of partial label targets. 
+Technically, we implemented PiCO using a distributed setup because we thought parallelization would be needed. However, while we train PiCO we had never actually enabled the distributed setup but only resorted to one single GPU training. Please carefully check the code if you would like to use multiple GPUs. It might be required to prepare a shared local copy of partial label dataset. 
 
 ## Results
 
