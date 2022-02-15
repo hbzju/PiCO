@@ -32,7 +32,7 @@ We provide the following demo codes for model training. Also see the ```run.sh``
 
 For CIFAR datasets, one can directly run the demo shell codes. 
 
-For CUB200 datasets, we provide a preprocessed copy [here](#) and just put them to ```data/cub200/processed``` .
+For CUB200 datasets, we provide a preprocessed copy [here](https://drive.google.com/file/d/1KNMPuKT1q3a6zIEgStar2o4xjs_a3Kge/view?usp=sharing) and just put them to ```data/cub200/processed``` .
 
 **Run cifar10 with q=0.5**
 
