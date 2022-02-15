@@ -26,11 +26,11 @@ PiCO is easy to be implemented and experiment with. All commands must be ran fro
 mkdir data experiment
 ```
 
-We provide the following demo codes for model training. Also see the ```run.sh``` file. 
+We provide the following shell codes for model training. Also see the ```run.sh``` file. 
 
 **Data Preparation**
 
-For CIFAR datasets, one can directly run the demo shell codes. 
+For CIFAR datasets, one can directly run the shell codes. 
 
 For CUB200 datasets, we provide a preprocessed copy [here](https://drive.google.com/file/d/1KNMPuKT1q3a6zIEgStar2o4xjs_a3Kge/view?usp=sharing) and just put them to ```data/cub200/processed``` .
 
