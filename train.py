@@ -28,10 +28,13 @@ from utils.cifar100 import load_cifar100
 torch.set_printoptions(precision=2, sci_mode=False)
 
 parser = argparse.ArgumentParser(description='PyTorch implementation of ICLR 2022 Oral paper PiCO')
-parser.add_argument('--dataset', default='cifar10', type=str)
+parser.add_argument('--dataset', default='cifar10', type=str, 
+                    choices=['cifar10', 'cifar100', 'cub200'],
+                    help='dataset name (cifar10)')
 parser.add_argument('--exp-dir', default='experiment/Prot_PLL', type=str,
-                    help='experiment directory')
-parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',choices=['resnet18'])
+                    help='experiment directory for saving checkpoints and logs')
+parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18', choices=['resnet18'],
+                    help='network architecture (only resnet18 used in PiCO)')
 parser.add_argument('-j', '--workers', default=32, type=int,
                     help='number of data loading workers (default: 32)')
 parser.add_argument('--epochs', default=500, type=int, 
@@ -76,7 +79,8 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'N processes per node, which has N GPUs. This is the '
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
-parser.add_argument('--num-class', default=10, type=int)
+parser.add_argument('--num-class', default=10, type=int,
+                    help='number of class')
 parser.add_argument('--low-dim', default=128, type=int,
                     help='embedding dimension')
 parser.add_argument('--moco_queue', default=8192, type=int, 
@@ -85,10 +89,14 @@ parser.add_argument('--moco_m', default=0.999, type=float,
                     help='momentum for updating momentum encoder')
 parser.add_argument('--proto_m', default=0.99, type=float,
                     help='momentum for computing the momving average of prototypes')
-parser.add_argument('--loss_weight', default=0.5, type=float,help='contrastive loss weight')
-parser.add_argument('--conf_ema_range', default='0.95,0.8', type=str)
-parser.add_argument('--prot_start', help = 'Start Prototype Updating', default=80, type=int)
-parser.add_argument('--partial_rate', default=0.1, type=float, help='contrastive loss weight')
+parser.add_argument('--loss_weight', default=0.5, type=float,
+                    help='contrastive loss weight')
+parser.add_argument('--conf_ema_range', default='0.95,0.8', type=str,
+                    help='pseudo target updating coefficient (phi)')
+parser.add_argument('--prot_start', default=80, type=int, 
+                    help = 'Start Prototype Updating')
+parser.add_argument('--partial_rate', default=0.1, type=float, 
+                    help='ambiguity level (q)')
 parser.add_argument('--hierarchical', action='store_true', 
                     help='for CIFAR-100 fine-grained training')
 
