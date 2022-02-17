@@ -21,10 +21,7 @@ This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** pap
 
 ## Start Running PiCO
 
-PiCO is easy to be implemented and experiment with. All commands must be ran from the project root. Before running, two folders should be created,
-```
-mkdir data experiment
-```
+PiCO is easy to be implemented and experiment with. All commands must be ran from the project root.
 
 We provide the following shell codes for model training. Also see the ```run.sh``` file. 
 
