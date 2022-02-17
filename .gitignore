@@ -3,3 +3,4 @@
 /experiment/*
 !/experiment/README.md
 /__pycache__
+*.pyc
