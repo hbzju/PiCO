@@ -1,6 +1,6 @@
 # Demo shell scripts
-# Note that we only tested single-GPU version
-# Please carefully check the codes if you would like to use multiple GPUs
+# Note that we only tested the single-GPU version
+# Please carefully check the code if you would like to use multiple GPUs
 
 # Run cifar10 with q=0.5
 CUDA_VISIBLE_DEVICES=0 python -u train.py \
