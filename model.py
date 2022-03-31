@@ -166,8 +166,3 @@ def concat_all_gather(tensor):
     output = torch.cat(tensors_gather, dim=0)
     return output
 
-@torch.no_grad()
-def get_entropy(logits):
-    probs = F.softmax(logits, dim=1)
-    log_probs = torch.log(probs + 1e-7) # avoid NaN
-    return -(probs*log_probs).sum(1)
