@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(description='PyTorch implementation of ICLR 202
 parser.add_argument('--dataset', default='cifar10', type=str, 
                     choices=['cifar10', 'cifar100', 'cub200'],
                     help='dataset name (cifar10)')
-parser.add_argument('--exp-dir', default='experiment/Prot_PLL', type=str,
+parser.add_argument('--exp-dir', default='experiment/PiCO', type=str,
                     help='experiment directory for saving checkpoints and logs')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18', choices=['resnet18'],
                     help='network architecture (only resnet18 used in PiCO)')
