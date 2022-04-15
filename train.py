@@ -17,7 +17,7 @@ import torch.utils.data
 import torch.utils.data.distributed
 import tensorboard_logger as tb_logger
 import numpy as np
-from model import ProtPLL
+from model import PiCO
 from resnet import *
 from utils.utils_algo import *
 from utils.utils_loss import partial_loss, SupConLoss
@@ -180,7 +180,7 @@ def main_worker(gpu, ngpus_per_node, args):
     
     # create model
     print("=> creating model '{}'".format(args.arch))
-    model = ProtPLL(args, SupConResNet)
+    model = PiCO(args, SupConResNet)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
