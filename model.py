@@ -4,7 +4,7 @@ from random import sample
 import numpy as np
 import torch.nn.functional as F
 
-class ProtPLL(nn.Module):
+class PiCO(nn.Module):
 
     def __init__(self, args, base_encoder):
         super().__init__()
