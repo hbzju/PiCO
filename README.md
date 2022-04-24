@@ -4,7 +4,7 @@
 
 This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** paper [PiCO](https://openreview.net/forum?id=EhYjZy6e1gJ); also see our [Project Page](https://hbzju.github.io/pico/). 
 
-**Title:** Contrastive Label Disambiguation for Partial Label Learning
+**Title:** PiCO: Contrastive Label Disambiguation for Partial Label Learning
 
 **Authors:** Haobo Wang, Ruixuan Xiao, Yixuan Li, Lei Feng, Gang Niu, Gang Chen, Junbo Zhao
 
