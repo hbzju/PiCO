@@ -23,7 +23,7 @@ This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** pap
 
 PiCO is easy to be implemented and experiment with. All commands must be ran from the project root.
 
-We provide the following shell codes for model training. Also see the ```run.sh``` file. 
+We provide the following shell codes for model training. Also, see the ```run.sh``` file. We didn't carefully tune the best number of epochs. A smaller number of training epochs (e.g. 400~500 epochs) can also produce good results, actually. 
 
 **Data Preparation**
 
