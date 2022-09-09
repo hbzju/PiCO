@@ -130,11 +130,7 @@ def generate_uniform_cv_candidate_labels(train_labels, partial_rate=0.1):
     random_n = np.random.uniform(0, 1, size=(n, K))
 
     for j in range(n):  # for each instance
-        for jj in range(K): # for each class 
-            if jj == train_labels[j]: # except true class
-                continue
-            if random_n[j, jj] < transition_matrix[train_labels[j], jj]:
-                partialY[j, jj] = 1.0
+        partialY[j, :] = torch.from_numpy((random_n[j, :] < transition_matrix[train_labels[j], :]) * 1)
 
     print("Finish Generating Candidate Label Sets!\n")
     return partialY
@@ -220,10 +216,7 @@ vehicles 2#lawn_mower, rocket, streetcar, tank, tractor'''
     random_n = np.random.uniform(0, 1, size=(n, K))
 
     for j in range(n):  # for each instance
-        for jj in range(K): # for each class 
-            if jj == train_labels[j]: # except true class
-                continue
-            if random_n[j, jj] < transition_matrix[train_labels[j], jj]:
-                partialY[j, jj] = 1.0
+        partialY[j, :] = torch.from_numpy((random_n[j, :] < transition_matrix[train_labels[j], :]) * 1)
+
     print("Finish Generating Candidate Label Sets!\n")
     return partialY
