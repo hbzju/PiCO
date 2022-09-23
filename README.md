@@ -11,12 +11,14 @@ This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** pap
 **Affliations:** Zhejiang University, University of Wisconsin-Madison, Chongqing University, RIKEN
 
 ```
- @article{wang2022pico,
-      title={PiCO: Contrastive Label Disambiguation for Partial Label Learning},
-      author={Wang, Haobo and Xiao, Ruixuan and Li, Yixuan and Feng, Lei and Niu, Gang and Chen, Gang and Zhao, Junbo},
-      journal={ICLR},
-      year={2022}
- } 
+@inproceedings{
+  wang2022pico,
+  title={Pi{CO}: Contrastive Label Disambiguation for Partial Label Learning},
+  author={Haobo Wang and Ruixuan Xiao and Yixuan Li and Lei Feng and Gang Niu and Gang Chen and Junbo Zhao},
+  booktitle={International Conference on Learning Representations},
+  year={2022},
+  url={https://openreview.net/forum?id=EhYjZy6e1gJ}
+}
 ```
 
 ## Start Running PiCO
