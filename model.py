@@ -118,8 +118,8 @@ class PiCO(nn.Module):
             return output
         # for testing
 
-        predicetd_scores = torch.softmax(output, dim=1) * partial_Y
-        max_scores, pseudo_labels = torch.max(predicetd_scores, dim=1)
+        predicted_scores = torch.softmax(output, dim=1) * partial_Y
+        max_scores, pseudo_labels = torch.max(predicted_scores, dim=1)
         # using partial labels to filter out negative labels
 
         # compute protoypical logits
@@ -137,18 +137,18 @@ class PiCO(nn.Module):
         with torch.no_grad():  # no gradient 
             self._momentum_update_key_encoder(args)  # update the momentum encoder
             # shuffle for making use of BN
-            im_k, predicetd_scores, partial_Y, idx_unshuffle = self._batch_shuffle_ddp(im_k, predicetd_scores, partial_Y)
+            im_k, predicted_scores, partial_Y, idx_unshuffle = self._batch_shuffle_ddp(im_k, predicted_scores, partial_Y)
             _, k = self.encoder_k(im_k)
             # undo shuffle
-            k, predicetd_scores, partial_Y = self._batch_unshuffle_ddp(k, predicetd_scores, partial_Y, idx_unshuffle)
+            k, predicted_scores, partial_Y = self._batch_unshuffle_ddp(k, predicted_scores, partial_Y, idx_unshuffle)
 
         features = torch.cat((q, k, self.queue.clone().detach()), dim=0)
-        pseudo_scores = torch.cat((predicetd_scores, predicetd_scores, self.queue_pseudo.clone().detach()), dim=0)
+        pseudo_scores = torch.cat((predicted_scores, predicted_scores, self.queue_pseudo.clone().detach()), dim=0)
         partial_target = torch.cat((partial_Y, partial_Y, self.queue_partial.clone().detach()), dim=0)
         # to calculate SupCon Loss using pseudo_labels and partial target
         
         # dequeue and enqueue
-        self._dequeue_and_enqueue(k, predicetd_scores, partial_Y, args)
+        self._dequeue_and_enqueue(k, predicted_scores, partial_Y, args)
 
         return output, features, pseudo_scores, partial_target, score_prot
 
@@ -165,4 +165,3 @@ def concat_all_gather(tensor):
 
     output = torch.cat(tensors_gather, dim=0)
     return output
-
