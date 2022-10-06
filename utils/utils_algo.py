@@ -122,9 +122,8 @@ def generate_uniform_cv_candidate_labels(train_labels, partial_rate=0.1):
 
     partialY = torch.zeros(n, K)
     partialY[torch.arange(n), train_labels] = 1.0
-    p_1 = partial_rate
     transition_matrix =  np.eye(K)
-    transition_matrix[np.where(~np.eye(transition_matrix.shape[0],dtype=bool))]=p_1
+    transition_matrix[np.where(~np.eye(transition_matrix.shape[0],dtype=bool))] = partial_rate
     print(transition_matrix)
 
     random_n = np.random.uniform(0, 1, size=(n, K))
@@ -201,9 +200,8 @@ vehicles 2#lawn_mower, rocket, streetcar, tank, tractor'''
 
     partialY = torch.zeros(n, K)
     partialY[torch.arange(n), train_labels] = 1.0
-    p_1 = partial_rate
     transition_matrix =  np.eye(K)
-    transition_matrix[np.where(~np.eye(transition_matrix.shape[0],dtype=bool))]=p_1
+    transition_matrix[np.where(~np.eye(transition_matrix.shape[0],dtype=bool))] = partial_rate
     mask = np.zeros_like(transition_matrix)
     for i in range(len(transition_matrix)):
         superclass = reverse_hierarchical_idx[i]
