@@ -3,6 +3,7 @@ import builtins
 import math
 import os
 import random
+from select import select
 import shutil
 import time
 import warnings
@@ -17,13 +18,16 @@ import torch.utils.data
 import torch.utils.data.distributed
 import tensorboard_logger as tb_logger
 import numpy as np
-from model import PiCO
+from model import PiCO_PLUS
 from resnet import *
-from utils.utils_algo import *
-from utils.utils_loss import partial_loss, SupConLoss
-from utils.cub200 import load_cub200
-from utils.cifar10 import load_cifar10
-from utils.cifar100 import load_cifar100
+from utils_plus.utils_algo import *
+from utils_plus.utils_loss import partial_loss, SupConLoss, ce_loss
+from utils_plus.cub200 import load_cub200
+from utils_plus.cifar10 import load_cifar10
+from utils_plus.cifar100 import load_cifar100
+import copy
+
+torch.autograd.set_detect_anomaly(True)
 
 torch.set_printoptions(precision=2, sci_mode=False)
 
@@ -97,8 +101,22 @@ parser.add_argument('--prot_start', default=80, type=int,
                     help = 'Start Prototype Updating')
 parser.add_argument('--partial_rate', default=0.1, type=float, 
                     help='ambiguity level (q)')
+parser.add_argument('--noisy_rate', default=0.2, type=float, 
+                    help='noisy level')
 parser.add_argument('--hierarchical', action='store_true', 
                     help='for CIFAR-100 fine-grained training')
+parser.add_argument('--pure_ratio', default='0.6', type=float,
+                    help='selection ratio')
+parser.add_argument('--knn_start', default=100, type=int,
+                    help='when to start kNN')
+parser.add_argument('--chosen_neighbors', default=16, type=int, 
+                    help='chosen neighbors')
+parser.add_argument('--temperature_guess', default=0.07, type=float, 
+                    help='temperature for label guessing')
+parser.add_argument('--ur_weight', default='0.1', type=float,
+                    help='weights for the losses of unreliable examples')
+parser.add_argument('--cls_weight', default=2, type=float,
+                    help='weights for the losses of mixup loss')
 
 def main():
     args = parser.parse_args()
@@ -125,16 +143,18 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
     
-    model_path = 'ds_{ds}_pr_{pr}_lr_{lr}_ep_{ep}_ps_{ps}_lw_{lw}_pm_{pm}_arch_{arch}_heir_{heir}_sd_{seed}'.format(
+    model_path = 'ds{ds}p{pr}n{nr}_ps{ps}_lw{lw}_pm{pm}_he_{heir}_sel{sel}_k{k}s{ks}_uw{uw}_sd{seed}'.format(
                                             ds=args.dataset,
                                             pr=args.partial_rate,
-                                            lr=args.lr,
-                                            ep=args.epochs,
                                             ps=args.prot_start,
                                             lw=args.loss_weight,
                                             pm=args.proto_m,
-                                            arch=args.arch,
                                             seed=args.seed,
+                                            sel=args.pure_ratio,
+                                            k=args.chosen_neighbors,
+                                            ks=args.knn_start,
+                                            nr=args.noisy_rate,
+                                            uw=args.ur_weight,
                                             heir=args.hierarchical)
     args.exp_dir = os.path.join(args.exp_dir, model_path)
     if not os.path.exists(args.exp_dir):
@@ -151,7 +171,6 @@ def main():
     else:
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
-
 
 def main_worker(gpu, ngpus_per_node, args):
     cudnn.benchmark = True
@@ -180,7 +199,7 @@ def main_worker(gpu, ngpus_per_node, args):
     
     # create model
     print("=> creating model '{}'".format(args.arch))
-    model = PiCO(args, SupConResNet)
+    model = PiCO_PLUS(args, SupConResNet)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -236,16 +255,17 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.dataset == 'cub200':
         input_size = 224  # fixed as 224
         train_loader, train_givenY, train_sampler, test_loader = load_cub200(input_size=input_size
-            , partial_rate=args.partial_rate, batch_size=args.batch_size)
+            , partial_rate=args.partial_rate, noisy_rate=args.noisy_rate, batch_size=args.batch_size)
     elif args.dataset == 'cifar10':
-        train_loader, train_givenY, train_sampler, test_loader = load_cifar10(partial_rate=args.partial_rate, batch_size=args.batch_size)
+        train_loader, train_givenY, train_sampler, test_loader = load_cifar10(partial_rate=args.partial_rate, batch_size=args.batch_size, noisy_rate=args.noisy_rate)
     elif args.dataset == 'cifar100':
-        train_loader, train_givenY, train_sampler, test_loader = load_cifar100(partial_rate=args.partial_rate, batch_size=args.batch_size, hierarchical=args.hierarchical)
+        train_loader, train_givenY, train_sampler, test_loader = load_cifar100(partial_rate=args.partial_rate, batch_size=args.batch_size, hierarchical=args.hierarchical, noisy_rate=args.noisy_rate)
     else:
         raise NotImplementedError("You have chosen an unsupported dataset. Please check and try again.")
     # this train loader is the partial label training loader
 
     print('Calculating uniform targets...')
+    num_instance = train_givenY.shape[0]
     tempY = train_givenY.sum(dim=1).unsqueeze(1).repeat(1, train_givenY.shape[1])
     confidence = train_givenY.float()/tempY
     confidence = confidence.cuda()
@@ -264,18 +284,25 @@ def main_worker(gpu, ngpus_per_node, args):
 
     best_acc = 0
     mmc = 0 #mean max confidence
+    sel_stats = {
+        'dist': torch.zeros(num_instance).cuda(),
+        'is_rel': torch.ones(num_instance).bool().cuda(),
+    }
+
     for epoch in range(args.start_epoch, args.epochs):
         is_best = False
-        start_upd_prot = epoch>=args.prot_start
         if args.distributed:
             train_sampler.set_epoch(epoch)
         
         adjust_learning_rate(args, optimizer, epoch)
-        train(train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, args, logger, start_upd_prot)
-        loss_fn.set_conf_ema_m(epoch, args)
+        if epoch >= args.prot_start:
+            reliable_set_selection(args, epoch, sel_stats)
+            # warm-up for 5 epochs and then start selection
+        train(args, train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, logger, sel_stats)
+        loss_fn.set_conf_ema_m(args, epoch)
         # reset phi
 
-        acc_test = test(model, test_loader, args, epoch, logger)
+        acc_test = test(args, model, test_loader, epoch, logger)
         mmc = loss_fn.confidence.max(dim=1)[0].mean()
         
         with open(os.path.join(args.exp_dir, 'result.log'), 'a+') as f:
@@ -295,7 +322,7 @@ def main_worker(gpu, ngpus_per_node, args):
             }, is_best=is_best, filename='{}/checkpoint.pth.tar'.format(args.exp_dir),
             best_file_name='{}/checkpoint_best.pth.tar'.format(args.exp_dir))
 
-def train(train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, args, tb_logger, start_upd_prot=False):
+def train(args, train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, tb_logger, sel_stats):
     batch_time = AverageMeter('Time', ':1.2f')
     data_time = AverageMeter('Data', ':1.2f')
     acc_cls = AverageMeter('Acc@Cls', ':2.2f')
@@ -306,6 +333,8 @@ def train(train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, args, tb
         len(train_loader),
         [batch_time, data_time, acc_cls, acc_proto, loss_cls_log, loss_cont_log],
         prefix="Epoch: [{}]".format(epoch))
+    
+    start_upd_prot = epoch >= args.prot_start
 
     # switch to train mode
     model.train()
@@ -318,28 +347,90 @@ def train(train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, args, tb
         X_w, X_s, Y, index = images_w.cuda(), images_s.cuda(), labels.cuda(), index.cuda()
         Y_true = true_labels.long().detach().cuda()
         # for showing training accuracy and will not be used when training
+        is_rel = sel_stats['is_rel'][index]
+        batch_weight = is_rel.float()
 
-        cls_out, features_cont, pseudo_target_cont, score_prot = model(X_w, X_s, Y, args)
+        cls_out, features_cont, pseudo_labels, score_prot, distance_prot, is_rel_queue\
+            = model(X_w, X_s, Y, Y_cor=None, is_rel=is_rel, args=args)
         batch_size = cls_out.shape[0]
-        pseudo_target_cont = pseudo_target_cont.contiguous().view(-1, 1)
+
+        pseudo_target_cont = pseudo_labels.contiguous().view(-1, 1)
 
         if start_upd_prot:
             loss_fn.confidence_update(temp_un_conf=score_prot, batch_index=index, batchY=Y)
             # warm up ended
-        
-        if start_upd_prot:
-            mask = torch.eq(pseudo_target_cont[:batch_size], pseudo_target_cont.T).float().cuda()
+            mask_all = torch.eq(pseudo_target_cont[:batch_size], pseudo_target_cont.T).float().cuda()
+            loss_cont_all = loss_cont_fn(features=features_cont, mask=mask_all, batch_size=batch_size, weights=None)
+            # This is a relaxed version and should be assigned a lower weight
+
+            mask = copy.deepcopy(mask_all).detach()
+            mask = batch_weight.unsqueeze(1).repeat(1, mask.shape[1]) * mask
+            # remove row-wise unreliable masks
+            mask = is_rel_queue.view(1, -1).repeat(mask.shape[0], 1) * mask
+            # remove column-wise unreliable masks
+
             # get positive set by contrasting predicted labels
+            if epoch >= args.knn_start:
+                cosine_corr = features_cont[:batch_size] @ features_cont.T
+                _, kNN_index = torch.topk(cosine_corr, k=args.chosen_neighbors, dim=-1, largest=True)
+                # largest cosine correlation indicates closer l2 distance
+                mask_kNN = torch.scatter(torch.zeros(mask.shape).cuda(), 1, kNN_index, 1)
+                # above: set remaining masks by kNN
+                mask[~is_rel] = mask_kNN[~is_rel]
+
+            mask[:, batch_size:batch_size*2] = ((mask[:, batch_size:batch_size*2] + torch.eye(batch_size).cuda())>0).float()
+            mask[:, :batch_size] = ((mask[:, :batch_size] + torch.eye(batch_size).cuda())>0).float()
+            # reset query/key positivities
+
+            if epoch >= args.knn_start:
+                weights = args.loss_weight * batch_weight + args.ur_weight * (1 - batch_weight)
+                # for clean data, we use the original loss weight
+                # for unreliable data, we calculate a knn-cont loss with a lower weight
+                loss_cont_rel_knn = loss_cont_fn(features=features_cont, mask=mask, batch_size=batch_size, weights=weights)
+                # jointly calculate the clean/knn-based contrastive loss, but assign knn loss a lower weight
+            else:
+                loss_cont_rel_knn = loss_cont_fn(features=features_cont, mask=mask, batch_size=batch_size, weights=None)
+            # above: contrastive loss on reliable examples
+
+            loss_cont = loss_cont_rel_knn + args.ur_weight * loss_cont_all
+
+            # classification loss
+            loss_cls = loss_fn(cls_out, index, is_rel)
+
+            sp_temp_scale = score_prot**(1/args.temperature_guess)
+            targets_guess = sp_temp_scale / sp_temp_scale.sum(dim=1, keepdim=True)
+            _, loss_cls_ur = ce_loss(cls_out, targets_guess, sel=~is_rel)
+            # label guessing on unreliable examples
+
+            l = np.random.beta(4, 4)
+            l = max(l, 1-l)
+            pseudo_label = loss_fn.confidence[index]
+            pseudo_label[~is_rel] = targets_guess[~is_rel]
+            # cancat clean label and guessed noisy labels
+            idx = torch.randperm(X_w.size(0))
+            X_w_rand = X_w[idx]
+            pseudo_label_rand = pseudo_label[idx]
+            X_w_mix = l * X_w + (1 - l) * X_w_rand      
+            pseudo_label_mix = l * pseudo_label + (1 - l) * pseudo_label_rand
+            logits_mix, _ = model.module.encoder_q(X_w_mix)
+            # use encoder q to avoid DDP error
+            _, loss_mix = ce_loss(logits_mix, targets=pseudo_label_mix)
+            # mixup loss
+
+            loss_cls = loss_mix + args.cls_weight * loss_cls + args.ur_weight * loss_cls_ur
+            # we use the loss_mix as the anchor because it uses all data examples
+            loss = loss_cls + loss_cont
         else:
-            mask = None
+            loss_cls = loss_fn(cls_out, index, is_rel=None)
+            loss_cont = loss_cont_fn(features=features_cont, mask=None, batch_size=batch_size)
             # Warmup using MoCo
 
-        # contrastive loss
-        loss_cont = loss_cont_fn(features=features_cont, mask=mask, batch_size=batch_size)
-        # classification loss
-        loss_cls = loss_fn(cls_out, index)
+            loss = loss_cls + args.loss_weight * loss_cont
+        # final loss
 
-        loss = loss_cls + args.loss_weight * loss_cont
+        sel_stats['dist'][index] = copy.deepcopy(distance_prot.clone().detach())
+        # update the distances for data selection
+
         loss_cls_log.update(loss_cls.item())
         loss_cont_log.update(loss_cont.item())
 
@@ -365,9 +456,18 @@ def train(train_loader, model, loss_fn, loss_cont_fn, optimizer, epoch, args, tb
         tb_logger.log_value('Prototype Acc', acc_proto.avg, epoch)
         tb_logger.log_value('Classification Loss', loss_cls_log.avg, epoch)
         tb_logger.log_value('Contrastive Loss', loss_cont_log.avg, epoch)
-    
 
-def test(model, test_loader, args, epoch, tb_logger):
+def reliable_set_selection(args, epoch, sel_stats):
+    dist = sel_stats['dist']
+    n = dist.shape[0]
+    is_rel = torch.zeros(n).bool().cuda()
+    sorted_idx = torch.argsort(dist)
+    chosen_num = int(n * args.pure_ratio)
+    is_rel[sorted_idx[:chosen_num]] = True
+    sel_stats['is_rel'] = is_rel
+    # select near-prototype samples as reliable and clean
+
+def test(args, model, test_loader, epoch, tb_logger):
     with torch.no_grad():
         print('==> Evaluation...')       
         model.eval()    

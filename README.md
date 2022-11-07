@@ -2,7 +2,7 @@
 
 ![framework](resources/framework.png)
 
-This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** paper [PiCO](https://openreview.net/forum?id=EhYjZy6e1gJ); also see our [Project Page](https://hbzju.github.io/pico/). 
+This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** paper [PiCO](https://openreview.net/forum?id=EhYjZy6e1gJ). Also, see our [Project Page](https://hbzju.github.io/pico/). 
 
 **Title:** PiCO: Contrastive Label Disambiguation for Partial Label Learning
 
@@ -20,6 +20,10 @@ This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** pap
   url={https://openreview.net/forum?id=EhYjZy6e1gJ}
 }
 ```
+
+## PiCO+: A Robust Extention to Noisy Partial Labels
+
+Recently, we released PiCO+, a robust extention that is able to mitigate potentially wrong candidate labels (*noisy partial label learning*). We refer the readers to xxx for more details.
 
 ## Start Running PiCO
 
@@ -57,7 +61,7 @@ CUDA_VISIBLE_DEVICES=1 python -u train.py \
 
 ```shell
 CUDA_VISIBLE_DEVICES=2 python -u train.py \
- --exp-dir experiment/Prot_PLL_CUB --dataset cub200 --num-class 200\
+ --exp-dir experiment/PiCO-CUB --dataset cub200 --num-class 200\
  --dist-url 'tcp://localhost:10003' --multiprocessing-distributed --world-size 1 --rank 0 --seed 124\
  --arch resnet18 --moco_queue 4096 --prot_start 100 --lr 0.01 --wd 1e-5 --cosine --epochs 300\
  --batch-size 256 --loss_weight 0.5 --proto_m 0.99 --partial_rate 0.1
