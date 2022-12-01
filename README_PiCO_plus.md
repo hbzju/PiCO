@@ -1,6 +1,6 @@
 # PiCO+: Contrastive Label Disambiguation for Robust Partial Label Learning
 
-This is a [PyTorch](http://pytorch.org) implementation of PiCO+, a robust extention of PiCO that is able to mitigate the noisy partial label learning problem.
+This is a [PyTorch](http://pytorch.org) implementation of [PiCO+](https://arxiv.org/pdf/2201.08984.pdf), a robust extention of PiCO that is able to mitigate the noisy partial label learning problem.
 
 ## Start Running PiCO+
 
