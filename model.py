@@ -171,7 +171,6 @@ class PiCO_PLUS(PiCO):
             _, within_max_cls = torch.max(predicetd_scores * Y_ori, dim=1)
             _, all_max_cls = torch.max(predicetd_scores, dim=1)
             pseudo_labels_b = batch_weight * within_max_cls + (1 - batch_weight) * all_max_cls
-            pseudo_labels_b = within_max_cls
             pseudo_labels_b = pseudo_labels_b.long()
             # for clean data, using partial labels to filter out negative labels
             # for noisy data, we enable a full set pseudo-label selection
