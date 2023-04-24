@@ -150,12 +150,12 @@ class PiCO_PLUS(PiCO):
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self, keys, labels, is_rel, args):
-        super()._dequeue_and_enqueue(keys, labels, args)
         is_rel = concat_all_gather(is_rel)
         batch_size = is_rel.shape[0]
         ptr = int(self.queue_ptr)
         self.queue_rel[ptr:ptr + batch_size] = is_rel
         # update queue_rel
+        super()._dequeue_and_enqueue(keys, labels, args)
 
     def forward(self, img_q, im_k=None, Y_ori=None, Y_cor=None, is_rel=None, args=None, eval_only=False, ):
 
