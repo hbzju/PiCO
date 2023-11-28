@@ -21,7 +21,7 @@ This is a [PyTorch](http://pytorch.org) implementation of **ICLR 2022 Oral** pap
 }
 ```
 
-## PiCO+: A Robust Extention to Noisy Partial Labels
+## PiCO+: A Robust Extention to Noisy Partial Labels (TPAMI 2024)
 
 Recently, we released [PiCO+](https://arxiv.org/pdf/2201.08984.pdf), a robust extension that is able to mitigate potentially wrong candidate labels (*noisy partial label learning*). We refer the readers to [README_PiCO_plus.md](https://github.com/hbzju/PiCO/blob/main/README_PiCO_plus.md) for more details.
 
