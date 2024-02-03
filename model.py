@@ -121,7 +121,7 @@ class PiCO(nn.Module):
         for feat, label in zip(concat_all_gather(q), concat_all_gather(pseudo_labels_b)):
             self.prototypes[label] = self.prototypes[label]*args.proto_m + (1-args.proto_m)*feat
         # normalize prototypes    
-        self.prototypes = F.normalize(self.prototypes, p=2, dim=1)
+        self.prototypes = F.normalize(self.prototypes, p=2, dim=1).detach()
         
         # compute key features 
         with torch.no_grad():  # no gradient 
@@ -194,7 +194,7 @@ class PiCO_PLUS(PiCO):
             # for feat, label in zip(concat_all_gather(q), concat_all_gather(pseudo_labels_b)):
                 self.prototypes[label] = self.prototypes[label]*args.proto_m + (1-args.proto_m)*feat
             # normalize prototypes
-            self.prototypes = F.normalize(self.prototypes, p=2, dim=1)
+            self.prototypes = F.normalize(self.prototypes, p=2, dim=1).detach()
             
             # compute key features 
             self._momentum_update_key_encoder(args)  # update the momentum encoder
